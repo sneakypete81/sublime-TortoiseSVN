@@ -21,13 +21,19 @@ class TortoiseSvnCommand(sublime_plugin.WindowCommand):
         settings = self.get_setting()
         tortoiseproc_path = settings.get('tortoiseproc_path')
 
-        if not os.path.isfile(tortoiseproc_path):
-            sublime.error_message('can\'t find TortoiseProc.exe,'
-                ' please config setting file' '\n   --sublime-TortoiseSVN')
-            raise
+        # if not os.path.isfile(tortoiseproc_path):
+        #     sublime.error_message('can\'t find TortoiseProc.exe,'
+        #         ' please config setting file' '\n   --sublime-TortoiseSVN')
+        #     raise
 
-        proce = subprocess.Popen('"' + tortoiseproc_path + '"' + 
-            ' /command:' + cmd + ' /path:"%s"' % dir , stdout=subprocess.PIPE)
+        dir = subprocess.check_output(["doitclient", "wpath", dir], universal_newlines=True).strip()
+
+        proce = subprocess.Popen(['doitclient', 'winwait', '-D', '-v',
+                                  'TortoiseProc.exe',
+                                  '/command:%s' % cmd,
+                                  '/path:"%s"' % dir], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        for line in proce.stdout.readlines():
+            print(line)
 
         # This is required, cause of ST must wait TortoiseSVN update then revert
         # the file. Otherwise the file reverting occur before SVN update, if the
